@@ -1,0 +1,425 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% ICML 2013 EXAMPLE LATEX SUBMISSION FILE %%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Use the following line _only_ if you're still using LaTeX 2.09.  %\documentstyle[icml2013,epsf,natbib]{article}
+% If you rely on Latex2e packages, like most moden people use this:
+\documentclass{article}
+
+% For figures
+\usepackage{graphicx} % more modern
+%\usepackage{epsfig} % less modern
+\usepackage{subfigure} 
+
+% For citations
+\usepackage{natbib}
+
+% For algorithms
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\usepackage{hyperref}
+
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+\usepackage[accepted]{icml2013} 
+
+\icmltitlerunning{CSE674 Advanced Machine Learning Project}
+
+\begin{document} 
+
+\twocolumn[
+\icmltitle{Hande Writing Probability Inference and Classification \\ 
+		}
+
+\icmlauthor{Jiangchuan He}{jiangchu@buffalo.edu}
+\icmladdress{Computer Science and Engineering Department, University at Buffalo,
+            Amherst, Buffalo, NY, USA}
+
+% the "keywords" metadata in the PDF but will not be shown in the document
+\icmlkeywords{boring formatting information, machine learning, ICML}
+
+\vskip 0.3in
+]
+
+\begin{abstract} 
+As we know, Handwriting recogition is one of the hot area in Machine Learning and
+Pattern Classification. Using probabilist graphical model on handwriting
+data is a commom way to achieve inference and classification.
+In this article, I am going to use probabilist graphical model (PGM) to make
+inference on children handwriting data set. I will also give specific implementation
+as well as evaluation of algorithms.
+\end{abstract} 
+
+\section{Introduction}
+In the past few decades, Machine Learning has increasingly gain its reputation in realizing
+artificial intellgience. A huge amount of machine learning algorithms have been invented to
+achieve more and more precise inference and prediction goal. This artical mainly concerned
+with one of them called probabilistic graphic model. The advantage of this model is that it
+can help infer the random variables dependence and thus may have better result for our 
+handewriting analysis.
+\subsection{General Description}
+In this project, I will use one of the model, call probabilistic graphic model (PGM) to
+solve classification problem on elementary school students hande writing. Specifically,
+I will first train a PGM model and then use it to infer different grade student's hande writing
+among 1st to 4st grade student. During the implementation, I will also calcuate the entropy,
+KL-divergence based on direct computation or approximate inference.
+In the final step, I will compare these two approaches and give a detailed illustration.
+\subsection{Dataset Description}
+We have two major data sets. First is cursive writing and the other is printed writing.
+Printed writing data are extracted from 1st-4st grade students and cursive writing data 
+are extracted from 3rd-4st grade students. To simplify the analysis, we only make classification
+on word \textbf{"and"}, that is all data set only contain infomation with "and" word.
+In order to clarify and help understanding, I post each features meaning and value, which are shown
+below.
+\begin{itemize}
+\item Initial stroke of "a"
+\item Formation of "a" staff
+\item Number of "n"arches" 
+\item Shape of "n" arches
+\item Location of "n"mid
+\item Formation of "d" staff
+\item Formation of "d" initial
+\item Formation of "d" terminal
+\item Symbol
+\item a-n relationship
+\item a-d relationship
+\item n-d relationship
+\end{itemize}
+
+The total features of printed are shown above. Each feature may contain three or
+four values. However, in pratice, it is possible that some features may have
+invalid value, like "-1" for null data or "99" for inconsistent data. The detail
+of how to handle these kinds of value will be discussed in next section
+\subsubsection{Handle Invalid Data}
+Handling invalid or missing data is one of the major steps in data preprocessing
+step. The handwriting data set of our project contain large amount of missing data
+"-1" and inconsistent data "99". If just ignoring them, it will obviously harm our
+model. So, an effective method must be put forward to solve this.
+My method of handling invalid data is single imputation, specifically using mode
+substituion. By calcuationg the mode value of each feature in each class, I simply
+replace the original invalid data with new data, the mode value.
+
+\section{Inference Algorithms} 
+In this part, I am going to use two approaches to make inference. The first is to 
+directly computute the value from data set. Another approach is to use Approximate
+Inference called Monte Carlo method. In this method, samples are produced by sampling
+from PGM models using common sampling approach like ancestral sampling or Gibbs sampling.
+\subsection{Mean of Distribution}
+First, I will use data sets to calcuate the mean feature value of each grade.
+The formula is shown below.
+\begin{equation}
+	\label{eq:mean-hat}
+	\hat{E}[p(x)]=\frac{1}{N}\sum_{N}^{i}x
+\end{equation}
+
+The result of direction computation is shown below.
+\begin{figure}[ht]
+		\vskip 0.1in
+		\begin{center}
+				\centerline{\includegraphics[width=\columnwidth]{mean_printed}}
+				\caption{mean value of printed writing, using data from all grades}
+		\end{center}
+		\vskip -0.1in
+\end{figure}
+
+\subsection{Most similar samples}
+The formula of calcuating the most similar samples to the mean is
+shown below.
+\begin{equation}
+		d(X,Y)=\frac{1}{D}\sum_{D}^{i=1}\frac{|X-Y|}{max(X)}
+\end{equation}
+Since some features' maximun value is 0, we must manually add one
+additional sample which all columns are 1 to prevent dividing by zero.
+We can easily know this won't hurt the data set so much.
+The distance of the most similar 4 samples to the mean of each grade is show below.
+\begin{figure}[ht]
+		\vskip 0.1in
+		\begin{center}
+				\centerline{\includegraphics[width=\columnwidth]{dist_most_sim_value_printed}}
+				\caption{The distance of the most similar 4 samples to the mean of each grade}
+		\end{center}
+		\vskip -0.1in
+\end{figure}
+
+\subsection{Entropy of Distribution}
+To calcuate the entropy, we first count the number of each value of each feature.
+After that, we use the entropy formula equation shown below to calcuate it.
+\begin{equation}
+	\label{entropy}
+	E[p(x)]=-\sum_{x}p(x)\ln p(x)
+\end{equation}
+Also in order to prevent zero probability, we need to manually add
+several samples depending on the values each feature can take.
+The entropy of each grade is shown below.
+
+\begin{figure}[ht]
+		\vskip 0.1in
+		\begin{center}
+				\includegraphics[width=\columnwidth]{entropy_printed}
+				\caption{entropy of each grade}
+		\end{center}
+		\vskip -0.1in
+\end{figure}
+
+\subsection{Relative Entropy between two Distributions}
+Since there are 4 classes of printed writing and 2 classes of cursive writing, we
+need to calculate x relative entropy values using the formula shown below.
+\begin{equation}
+	KL(p||q)=-\sum_{x}p(x)[\ln q(x) - \ln p(x)]
+\end{equation}
+
+The result is shown below.
+\begin{figure}[ht]
+		\vskip 0.1in
+		\begin{center}
+				\includegraphics[width=\columnwidth]{relative_entropy_printed}
+				\caption{relative entropy between each grades}
+		\end{center}
+		\vskip -0.1in
+\end{figure}
+
+\subsection{Unusual writing}
+To get the most unusual writing, I use likelihood function and calculate negative log value
+of each sample. The most unusual writings of each grade and each writing type are listed below.
+\begin{equation}
+		value=-\ln {\prod p(x)}
+		=-\sum_{x}\ln {p(x)}
+\end{equation}
+
+\begin{table}[t]
+\vskip 0.15in
+\begin{center}
+		\begin{tabular}{ | l | l | l | p{5cm} |}
+				\hline
+				Grade printed & Numbers & Value \\ \hline
+				grade 1 	& 5  & 3.8755    \\ \hline
+				grade 2 	& 71 & 2.8934    \\ \hline
+				grade 3 	& 61 & 2.5030    \\ \hline
+				grade 4 	& 49 & 2.7162  \\
+				\hline
+		\end{tabular}
+\end{center}
+\vskip -0.5in
+\begin{center}
+		\begin{tabular}{ | l | l | l | p{5cm} |}
+				\hline
+				Grade cursive & Numbers & Value \\ \hline
+				grade 3 	& 25 & 2.8662    \\ \hline
+				grade 4 	& 18 & 3.4497 	 \\
+				\hline
+		\end{tabular}
+\end{center}
+\caption{Unusual writing of each grade and each writing type}
+\vskip -0.1in
+\end{table}
+\subsection{Results and Discussion}
+In direct computation step, we calculate the mean, entropy, relative entropy of each grade.
+Based on the results, we can easily find that relative entropy between each grades gives
+the most significant explanation. According to Figure 4, we can give such a description.
+KL divergence between grade 1 and 2, grade 2 and 3 or grade 3 and 4 are small, while this
+value is much larger between grade 1 and 3 or grade 1 and 4 or 2 and 4. This is due to children's
+handwriting keeping on changing from grade 1 to 4. So, the KL divergence, which measures the extent
+of difference, is larger between 1 and 3 than 2 and 3.
+\section{Learning Bayesian Network}
+In this section, A Probablisitic Graphic Model of Bayesian network will be built up and I will use it to do approximate
+sampling. The main process will be first learning the graph structure and obtaining the conditional probability, after
+that, we can use this model to do sampling like gibbs sampling.
+\subsection{Learning Graph Structrue}
+The first step of using Bayesian network is to construct its graph structure.
+There are two major structure learning algorithms. First is called constrained-based
+algorithm. Another one is called search and scoring alogrithm. Since we need
+to test probabilistic dependence relationship. I will use this algorithm to construct the
+graph structure.
+In order to reduce the space of possible DAGs i, we need to add some constrains. The method in
+this article mainly concerned two kinds of constrains. First is constraints on parameters and 
+the second is structure constraints.
+For both constraints, we have following assumptions.
+
+\begin{itemize}
+		\item The variables in the database (sample) are discrete. 
+		\item The cases occur independently given the underlying probabilistic model of the data.
+		\item The volume of the data is large enough for the reliable independence tests used in the algorithm proposed here. 
+
+\end{itemize}
+Besides assumpions mentioned above, we also have several additional independence assumptions.
+We assume the data come from a mutinominal distribtuion. Since mutual information 
+can be represented below
+\begin{equation}
+		H(X:Y)=I(X,Y)=\sum_{x,y}P(x,y)\ln \frac{P(x,y)}{P(x)P(y)}
+\end{equation}
+and we know a measure that can be used to establish the dependent and independent relationship
+between two node, which is shown below.
+\begin{equation}
+		T = 2 N \hat I
+\end{equation}
+where N is the size of the sample and $\hat I$ can be the equation (eq.6).
+Under independence assumption and under the hypothesis that the data come from
+a multinomial distribution, the value of T is aysmptotically distributed as a 
+$\chi^2$ variable with (X-1)(Y-1) degrees of freedom. From this knowledge,
+we can then perform an independence statistical test to check whether two variables
+in a Bayesian network are marginally or conditionally dependent or independent.
+\subsection{Algorithm Description}
+1. Compute the value of the mutual information that each variable
+Yi ($ 1 \leq i \leq n $) provides to X and order them according the information
+they provide from the largest to the smallest value. The order variables
+will be labelled now Y(1), Y(2),...,Y(n). Draw the arc from Y(1) to X. and check whether
+the hyothesis that two variables are independent from each other holds or not.
+If H0 does not hold then draw a directed arc from Y(i) ($ 2 \leq i  \leq n$ ) to X.
+\\2. Compute the value of the conditional mutual information that each
+Y(i) provides to X given Y(1).
+\\3. Do X=Y(1) and delete Y(1) from the set of independent random variables
+Let the number of independent variable n=n-1. If $n \geq 2$ then goto step 1; otherwise
+stop.
+\subsection{structure description}
+The final result of each grade's graph is show below.
+\begin{figure}[h]
+		\vskip 0.1in
+		\centering
+				\centerline{\includegraphics[width=.7\columnwidth]{graph_grade_1_printed}}
+				\caption{The graph generated using grade one printed data set}
+		\vskip -0.1in
+\end{figure}
+From the figure 5, we know that v0 depends on
+v1. v3 dependes on v2 and v6 depends on v7.
+\begin{figure}[h]
+		\centering
+				\centerline{\includegraphics[width=.9\columnwidth]{graph_grade_2_printed}}
+				\caption{The graph generated using grade two printed data set}
+\end{figure}
+From figure 6, we know that v5, v7 has common parent
+node v6. v9 and v10 also has common parent v11. We can
+see this graph is a little complicated than graph from
+grade one.
+\begin{figure}[h]
+		\begin{center}
+				\centerline{\includegraphics[width=.5\columnwidth]{graph_grade_3_printed}}
+				\caption{The graph generated using grade three printed data set}
+		\end{center}
+\end{figure}
+\begin{figure}[h]
+		\begin{center}
+				\centerline{\includegraphics[width=.5\columnwidth]{graph_grade_4_printed}}
+				\caption{The graph generated using grade four printed data set}
+		\end{center}
+\end{figure}
+
+\begin{table}[h]
+%\vskip 0.1in
+\begin{center}
+		\begin{tabular}{ | l | l | l | p{5cm} |}
+				\hline
+				Grade 		 	& iterations   \\ \hline
+				grade 1 		& 19      \\ \hline
+				grade 2 		& 652     \\ \hline
+				grade 3 		& 95     \\ \hline
+				grade 4 		& 101   \\
+				\hline
+		\end{tabular}
+\end{center}
+\caption{iterations times used by each grade data to train the graph structure}
+%\vskip -0.1in
+\end{table}
+
+\subsection{Inference}
+\subsubsection{mean calculation}
+Using the sampling data to calcuate the mean value, the 
+result is shown in figure 9.
+\begin{figure}[h]
+		%\vskip 0.1in
+		\begin{center}
+				\centerline{\includegraphics[width=\columnwidth]{s_mean}}
+				\caption{the mean value of using sampling data}
+		\end{center}
+		%\vskip -0.1in
+\end{figure}
+\subsubsection{entropy}
+Using the sampling data to calculate entropy, the result
+is shown in figure 10.
+\begin{figure}[h]
+		\vskip 0.1in
+		\begin{center}
+				\centerline{\includegraphics[width=\columnwidth]{s_entropy}}
+				\caption{the entropy value of using sampling data}
+		\end{center}
+		\vskip -0.1in
+\end{figure}
+
+\subsubsection{KL divergence}
+Using the sampling data to calculate KL divergence, the result
+is shown in figure 11.
+\begin{figure}[h]
+		\vskip 0.1in
+		\begin{center}
+				\centerline{\includegraphics[width=\columnwidth]{s_kl}}
+				\caption{the KL divergencevalue of using sampling data}
+		\end{center}
+		\vskip -0.1in
+\end{figure}
+
+\section{Conclusion} 
+From the work mentioned above, we can see using probabilistic graphic model
+to make infernece is effective, in spite of model complexcity to some extent.
+Given the test result, we can know that children's handwriting keep on changing
+and thus the value of relative entropy between grade 1 and 3 is larger than
+2 and 3.
+\\Due to limited amount of preparation,  a lot of work still need to
+be improved, such as algorithm efficency and space efficiency analysis. This
+part of work will be included in the next report.
+
+%\begin{algorithm}[tb]
+%   \caption{Bubble Sort}
+%   \label{alg:example}
+%\begin{algorithmic}
+%   \STATE {\bfseries Input:} data $x_i$, size $m$
+%   \REPEAT
+%   \STATE Initialize $noChange = true$.
+%   \FOR{$i=1$ {\bfseries to} $m-1$}
+%   \IF{$x_i > x_{i+1}$} 
+%   \STATE Swap $x_i$ and $x_{i+1}$
+%   \STATE $noChange = false$
+%   \ENDIF
+%   \ENDFOR
+%   \UNTIL{$noChange$ is $true$}
+%\end{algorithmic}
+%\end{algorithm}
+ 
+ 
+% Note use of \abovespace and \belowspace to get reasonable spacing 
+% above and below tabular lines. 
+
+%\begin{table}[t]
+%\caption{Classification accuracies for naive Bayes and flexible 
+%Bayes on various data sets.}
+%\label{sample-table}
+%\vskip 0.15in
+%\begin{center}
+%\begin{small}
+%\begin{sc}
+%\begin{tabular}{lcccr}
+%\hline
+%\abovespace\belowspace
+%Data set & Naive & Flexible & Better? \\
+%\hline
+%\abovespace
+%Breast    & 95.9$\pm$ 0.2& 96.7$\pm$ 0.2& $\surd$ \\
+%Cleveland & 83.3$\pm$ 0.6& 80.0$\pm$ 0.6& $\times$\\
+%Glass2    & 61.9$\pm$ 1.4& 83.8$\pm$ 0.7& $\surd$ \\
+%Credit    & 74.8$\pm$ 0.5& 78.3$\pm$ 0.6&         \\
+%Horse     & 73.3$\pm$ 0.9& 69.7$\pm$ 1.0& $\times$\\
+%Meta      & 67.1$\pm$ 0.6& 76.5$\pm$ 0.5& $\surd$ \\
+%Pima      & 75.1$\pm$ 0.6& 73.9$\pm$ 0.5&         \\
+%\belowspace
+%Vehicle   & 44.9$\pm$ 0.6& 61.5$\pm$ 0.4& $\surd$ \\
+%\hline
+%\end{tabular}
+%\end{sc}
+%\end{small}
+%\end{center}
+%\vskip -0.1in
+%\end{table}
+
+\nocite{langley00}
+
+
+\end{document} 
